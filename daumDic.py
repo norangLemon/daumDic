@@ -65,7 +65,6 @@ class daumDic():
         soup = soup_raw.find(class_="search_box")
         
         if not soup:
-            print("------inner_top")  #FIXME
             # 페이지 형식이 다른 경우
             soup = soup_raw.find(class_="inner_top")
 
@@ -76,20 +75,15 @@ class daumDic():
             self.search_list = soup.find(class_="list_mean").find_all(class_="txt_mean")
             
         else:    
-            print("------search_box")     #FIXME
             self.search_word = soup.find(class_= re.compile("_cleanword"))
             self.search_list = soup.find(class_="list_search").find_all(class_="txt_search")
 
     def getResult(self):
         if not self.search_list or not self.search_word:
             return "검색 결과가 존재하지 않습니다"
-        print ("사전:\n-------\n"+self.search_dic.text)
-        print ("표제어:\n-------\n"+self.search_word.text)
-        print ("뜻:\n-------")
-        result = '[' + self.search_dic.text + ']' + self.search_word.text + ": "
+        result = '[' + self.search_dic.text + '] ' + self.search_word.find("span").text + ": "
 
         for mean in self.search_list:
-            print(mean.text)
             result += mean.text + ", "
         
         result.strip(', ')
