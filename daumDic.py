@@ -34,6 +34,7 @@ class daumDic():
             return
         
         self.dic = daumDic.map_dic.get(parsed[0])
+        self.search_dic = parsed[0]
         self.word = parsed[1]
 
         self.search()
@@ -47,20 +48,25 @@ class daumDic():
         req = daumDic.session.get(addr)
 
         soup_raw = BeautifulSoup(req.text, "html.parser")
-        self.search_dic = soup_raw.find(class_="ir_wa")
-        if not self.search_dic:
-            word_key = soup_raw.find(string = re.compile("kew\d{9}"))   # 정규식을 써서 단어의 번호를 찾아낸다
-            if word_key:
-                addr = daumDic.addr_re + word_key                       # redirect되는 주소를 알아낸다
-                req = daumDic.session.get(addr)
-                soup_raw = BeautifulSoup(req.text, "html.parser")
-                self.search_dic = soup_raw.find(class_="ir_wa")
-
-                if not self.search_dic:
-                    return
-                else:
-                    return
         
+        # 특정 검색의 경우, js를 사용하여 redirect 되기도 한다.
+        # 이때는 단어의 번호를 코드에서 찾아낼 수 있다.
+        # 이것을 이용하여 특정한 경우에는 주소를 다시 바꾸어 크롤링한다.
+        word_key = soup_raw.find(string = re.compile("kew\d{9}"))          
+        if word_key:
+            addr = daumDic.addr_re + word_key                       # redirect되는 주소를 알아낸다
+            req = daumDic.session.get(addr)
+            soup_raw = BeautifulSoup(req.text, "html.parser")
+        
+        self.search_word = soup_raw.find(class_= re.compile("txt_clean"))
+        print(self.search_word)
+        if not self.search_word:
+            # 검색에 실패한 경우
+            print(self.word + " 검색 실패") # FIXME
+            return
+
+        if self.search_dic == "사전":
+            self.search_dic = soup_raw.find("h4", class_="tit_word").text.strip('사전')
 
         soup = soup_raw.find(class_="search_box")
         
@@ -71,17 +77,18 @@ class daumDic():
             # 검색 결과가 없는 경우
             if not soup:
                 return
-            self.search_word = soup.find(class_="txt_cleanword")
             self.search_list = soup.find(class_="list_mean").find_all(class_="txt_mean")
             
         else:    
-            self.search_word = soup.find(class_= re.compile("_cleanword"))
             self.search_list = soup.find(class_="list_search").find_all(class_="txt_search")
+        
+
 
     def getResult(self):
         if not self.search_list or not self.search_word:
             return "검색 결과가 존재하지 않습니다"
-        result = '[' + self.search_dic.text + '] ' + self.search_word.find("span").text + ": "
+        print(self.search_word.text)        # FIXME
+        result = '[' + self.search_dic + '] ' + self.search_word.text + ": "
 
         for mean in self.search_list:
             result += mean.text + ", "
