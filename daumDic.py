@@ -83,6 +83,8 @@ class daumDic():
 
 
     def getResult(self):
+        if not self.word:
+            return "검색할 단어를 입력해주세요"
         if not self.search_list or not self.search_word:
             return "검색 결과가 존재하지 않습니다"
         result = '[' + self.search_dic + '] ' + self.search_word.text + ": "
