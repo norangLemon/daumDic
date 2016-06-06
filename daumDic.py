@@ -86,5 +86,4 @@ class daumDic():
         for mean in self.search_list:
             result += mean.text + ", "
         
-        result.strip(', ')
-        return result
+        return result.strip(', ')
